@@ -1,0 +1,29 @@
+services:
+  sabnzbd:
+    image: linuxserver/sabnzbd:latest
+    container_name: sabnzbd
+    labels:
+      traefik.enable:                                         'true'
+      traefik.docker.network:                                 "${TRAEFIK_NETWORK:-traefik}"
+      traefik.http.routers.sabnzbd.rule:                      "${TRAEFIK_RULE:-Host(`sabnzbd.localhost`)}"
+      traefik.http.services.sabnzbd.loadbalancer.server.port: '8080'
+    environment:
+      PUID: "${PUID:-911}"
+      PGID: "${PGID:-911}"
+      TZ:   "${TZ:-Etc/UTC}"
+    volumes:
+      - type:   bind
+        source: ./config
+        target: /config
+        bind:   { create_host_path: true }
+      - type:   bind
+        source: "${SABNZBD_DATA_DIR:-./data}"
+        target: /data
+        bind:   { create_host_path: true }
+    networks:
+      traefik:
+    restart: unless-stopped
+
+networks:
+  traefik:
+    name: "${TRAEFIK_NETWORK:-traefik}"
